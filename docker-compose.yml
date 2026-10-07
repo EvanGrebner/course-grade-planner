@@ -1,0 +1,29 @@
+# Purpose: Runs a local PostgreSQL database for the Course Grade Planner.
+# The tables are created the first time it starts.
+# The login below is only for testing on your own computer.
+# How to run it: docker compose up -d
+# To stop it and keep your data: docker compose down
+# To stop it and delete your data: docker compose down -v
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: gradeplanner-db
+    environment:
+      POSTGRES_DB: gradeplanner
+      POSTGRES_USER: gradeplanner
+      POSTGRES_PASSWORD: gradeplanner
+    ports:
+      - "5432:5432"
+    volumes:
+      # keeps your data after the container stops
+      - gradeplanner-data:/var/lib/postgresql/data
+      # runs the schema the first time the database starts
+      - ./src/main/resources/schema.sql:/docker-entrypoint-initdb.d/01-schema.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U gradeplanner -d gradeplanner"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+volumes:
+  gradeplanner-data:
